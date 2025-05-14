@@ -7,13 +7,14 @@
  ***************************************************************************/
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.IO;
 
 namespace NVorbis
 {
-    public class VorbisReader : IDisposable
+    public class VorbisReader : IDisposable, IEnumerable<byte[]>
     {
         int _streamIdx;
 
@@ -131,6 +132,61 @@ namespace NVorbis
                 return _decoders[_streamIdx];
             }
         }
+
+        #region Enumerable
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+        /// <summary>
+        /// Enumerates the decoded samples as a 16-bit PCM data stream of bytes.
+        /// </summary>
+        public IEnumerator<byte[]> GetEnumerator()
+        {
+            var buffer = new float[4096];
+            int count;
+            while ((count = ReadSamples(buffer, 0, buffer.Length)) > 0)
+            {
+                byte[] vorbis_bytes = new byte[count * 2];
+                // Debug flag if clipping has occurred
+                bool clipflag = false;
+
+                for (int j = 0; j < count; j++)
+                {
+                    int val = (int)(buffer[j] * 32767.0);
+
+                    //        short val=(short)(pcm[i][mono+j]*32767.);
+                    //        int val=(int)Math.round(pcm[i][mono+j]*32767.);
+                    // might as well guard against clipping
+                    if (val > 32767)
+                    {
+                        val = 32767;
+                        clipflag = true;
+                    }
+                    if (val < -32768)
+                    {
+                        val = -32768;
+                        clipflag = true;
+                    }
+                    if (val < 0) val = val | 0x8000;
+
+                    if (BitConverter.IsLittleEndian)
+                    {
+                        vorbis_bytes[j * 2] = (byte)(val);
+                        vorbis_bytes[j * 2 + 1] = (byte)((uint)val >> 8);
+                    }
+                    else
+                    {
+                        vorbis_bytes[j * 2] = (byte)((uint)val >> 8);
+                        vorbis_bytes[j * 2 + 1] = (byte)(val);
+
+                    }
+                }
+
+                yield return vorbis_bytes;
+            }
+        }
+        #endregion
 
         #region Public Interface
 
