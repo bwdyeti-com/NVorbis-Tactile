@@ -147,43 +147,40 @@ namespace NVorbis
             int count;
             while ((count = ReadSamples(buffer, 0, buffer.Length)) > 0)
             {
-                byte[] vorbis_bytes = new byte[count * 2];
+                byte[] vorbisBytes = new byte[count * 2];
                 // Debug flag if clipping has occurred
-                bool clipflag = false;
+                bool clipFlag = false;
 
                 for (int j = 0; j < count; j++)
                 {
-                    int val = (int)(buffer[j] * 32767.0);
+                    int val = (int)(buffer[j] * short.MaxValue);
 
-                    //        short val=(short)(pcm[i][mono+j]*32767.);
-                    //        int val=(int)Math.round(pcm[i][mono+j]*32767.);
                     // might as well guard against clipping
-                    if (val > 32767)
+                    if (val > short.MaxValue)
                     {
-                        val = 32767;
-                        clipflag = true;
+                        val = short.MaxValue;
+                        clipFlag = true;
                     }
-                    if (val < -32768)
+                    if (val < short.MinValue)
                     {
-                        val = -32768;
-                        clipflag = true;
+                        val = short.MinValue;
+                        clipFlag = true;
                     }
-                    if (val < 0) val = val | 0x8000;
-
+                    // Resolve Endianness
                     if (BitConverter.IsLittleEndian)
                     {
-                        vorbis_bytes[j * 2] = (byte)(val);
-                        vorbis_bytes[j * 2 + 1] = (byte)((uint)val >> 8);
+                        vorbisBytes[j * 2] = (byte)(val);
+                        vorbisBytes[j * 2 + 1] = (byte)((uint)val >> 8);
                     }
                     else
                     {
-                        vorbis_bytes[j * 2] = (byte)((uint)val >> 8);
-                        vorbis_bytes[j * 2 + 1] = (byte)(val);
+                        vorbisBytes[j * 2] = (byte)((uint)val >> 8);
+                        vorbisBytes[j * 2 + 1] = (byte)(val);
 
                     }
                 }
 
-                yield return vorbis_bytes;
+                yield return vorbisBytes;
             }
         }
         #endregion
