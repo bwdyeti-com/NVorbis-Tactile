@@ -134,6 +134,21 @@ namespace NVorbis
         }
 
         #region Enumerable
+        private int EnumeratorBufferSize = 4096;
+        /// <summary>
+        /// Sets a new size for the enumerator buffer.
+        /// </summary>
+        /// <param name="value">
+        /// The new size, between 128 (1 Kb) and 8388608 (8 MB).
+        /// Values outside of this range will throw an Exception.
+        /// </param>
+        public void SetEnumeratorBufferSize(int value)
+        {
+            if (value < 128 || value > 8388608)
+                throw new ArgumentOutOfRangeException();
+            EnumeratorBufferSize = value;
+        }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
@@ -143,7 +158,7 @@ namespace NVorbis
         /// </summary>
         public IEnumerator<byte[]> GetEnumerator()
         {
-            var buffer = new float[4096];
+            var buffer = new float[EnumeratorBufferSize / 2];
             int count;
             while ((count = ReadSamples(buffer, 0, buffer.Length)) > 0)
             {
@@ -181,6 +196,10 @@ namespace NVorbis
                 }
 
                 yield return vorbisBytes;
+
+                // Update buffer size
+                if (buffer.Length != EnumeratorBufferSize / 2)
+                    buffer = new float[EnumeratorBufferSize / 2];
             }
         }
         #endregion
