@@ -140,12 +140,15 @@ namespace NVorbis
         /// </summary>
         /// <param name="value">
         /// The new size, between 128 (1 Kb) and 8388608 (8 MB).
-        /// Values outside of this range will throw an Exception.
+        /// Values outside of this range will throw an Exception,
+        /// as will values that would return partial samples.
         /// </param>
         public void SetEnumeratorBufferSize(int value)
         {
             if (value < 128 || value > 8388608)
                 throw new ArgumentOutOfRangeException();
+            if (value % (Channels * sizeof(short) / sizeof(byte)) != 0)
+                throw new ArgumentException();
             EnumeratorBufferSize = value;
         }
 
