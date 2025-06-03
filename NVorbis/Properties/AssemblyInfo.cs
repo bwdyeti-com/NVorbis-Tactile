@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
+#if !ANDROID
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
@@ -9,8 +10,11 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany("Andrew Ward")]
 [assembly: AssemblyProduct("NVorbis")]
 [assembly: AssemblyCopyright("Copyright © Andrew Ward 2014")]
+#endif
 
 [assembly: ComVisible(false)]
 
+#if !ANDROID
 [assembly: AssemblyVersion("0.8.4.0")]
 [assembly: AssemblyFileVersion("0.8.4.0")]
+#endif
